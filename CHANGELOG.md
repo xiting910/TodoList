@@ -21,5 +21,10 @@
 - GitHub Issue 和 PR 模板
 - 项目配置文件（.editorconfig, .gitignore, .gitattributes）
 - 前后端单元测试框架配置（xUnit / Vitest）
+- Dependabot npm 依赖更新配置（前端）
+
+### Fixed
+
+- 修复前端 CI 测试步骤在无测试文件时失败的问题（添加 passWithNoTests 配置）
 
 [Unreleased]: https://github.com/xiting910/TodoList/commits/main

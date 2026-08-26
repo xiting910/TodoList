@@ -1,11 +1,11 @@
 # =============================================================================
-# Dependabot 自动依赖更新配置, 每周自动检查 NuGet 包和 GitHub Actions 是否有新版本
+# Dependabot 自动依赖更新配置
 # =============================================================================
 version: 2
 updates:
   # ── NuGet 依赖更新 ───────────────────────────────────────────────────────
   - package-ecosystem: "nuget"
-    directory: "/"
+    directory: "/backend"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -34,6 +34,64 @@ updates:
           - "patch"
       # 其余包合并为一组
       nuget-catchall:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ── npm 依赖更新 ─────────────────────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
+    rebase-strategy: auto
+    labels:
+      - "dependencies"
+      - "npm"
+    groups:
+      # Vue 生态相关包合并更新
+      vue-ecosystem:
+        patterns:
+          - "vue"
+          - "@vue/*"
+          - "vue-tsc"
+        update-types:
+          - "minor"
+          - "patch"
+      # Vite 构建工具相关包合并更新
+      vite-ecosystem:
+        patterns:
+          - "vite"
+          - "@vitejs/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # ESLint 相关包合并更新
+      eslint:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+          - "typescript-eslint"
+        update-types:
+          - "minor"
+          - "patch"
+      # 测试相关包合并更新
+      testing:
+        patterns:
+          - "vitest"
+          - "@vue/test-utils"
+          - "jsdom"
+        update-types:
+          - "minor"
+          - "patch"
+      # 其余包合并为一组
+      npm-catchall:
         patterns:
           - "*"
         update-types:
