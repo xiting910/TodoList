@@ -1,0 +1,19 @@
+# node_modules
+**/node_modules/
+
+# VS
+**/.vs/
+*.user
+
+# 构建产物
+**/.vite/
+**/dist/
+**/bin/
+**/obj/
+
+# 测试
+TestResults/
+!TestResults/*.trx
+
+# 数据库
+*.db*

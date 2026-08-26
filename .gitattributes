@@ -1,0 +1,28 @@
+# 默认规则
+* text=auto eol=lf
+
+# 源代码
+*.cs        text    diff=csharp
+
+# 项目文件
+*.csproj    text    merge=union
+*.props     text    merge=union
+*.slnx      text    merge=union
+
+# Markdown 文件
+*.md        text    diff=markdown
+
+# 前端源码
+*.css       text    diff=css
+*.html      text    diff=html
+*.js        text    diff=javascript
+*.ts        text    diff=typescript
+*.vue       text
+
+# 脚本
+*.bat       text    eol=crlf
+*.sh        text    eol=lf
+
+# 二进制文件
+*.png       binary
+*.svg       binary

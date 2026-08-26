@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/others/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+  </Folder>
+  <Project Path="TodoList.API\TodoList.API.csproj" Id="fd37a954-e2ef-4fdd-a43b-b9e15354a646" />
+  <Project Path="TodoList.API.Tests\TodoList.API.Tests.csproj" Id="6c20f631-1ecf-4905-a3b6-341a7c997a6b" />
+</Solution>

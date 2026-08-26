@@ -1,0 +1,136 @@
+# =============================================================================
+# CodeQL 代码安全分析工作流: 根据代码变化分析前端或后端代码
+# =============================================================================
+name: CodeQL Analysis
+
+# 触发时机：push 到 main、PR 到 main、每周一 0:00 UTC (即北京时间周一 8:00)
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 0 * * 1"
+
+# 需要 security-events:write 才能把扫描结果写入 GitHub Security 面板
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+# 定义分析任务
+jobs:
+  # 检测代码变化的作业
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      # 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # 检测哪些目录发生了变化
+      - name: Detect changes
+        uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
+  # 后端代码分析作业
+  backend-analyze:
+    needs: detect-changes
+    # 当后端代码有变化或者是定时任务时运行
+    if: needs.detect-changes.outputs.backend == 'true' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["csharp"]
+
+    steps:
+      # 1. 检出代码库内容
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # 2. 初始化 CodeQL 引擎, 指定分析 C# 语言, 使用自动构建模式, 并排除测试项目的扫描
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: autobuild
+          config: |
+            paths:
+              - 'backend/**'
+            paths-ignore:
+              - "backend/TodoList.API.Tests/**"
+
+      # 3. 安装 .NET 10 SDK, CodeQL 自动构建需要它
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+          cache: true
+          cache-dependency-path: |
+            **/*.csproj
+            **/*.props
+            **/*.slnx
+
+      # 4. 执行分析并将结果上传到 GitHub Security 面板
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{matrix.language}}"
+
+  # 前端代码分析作业
+  frontend-analyze:
+    needs: detect-changes
+    # 当前端代码有变化或者是定时任务时运行
+    if: needs.detect-changes.outputs.frontend == 'true' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["javascript-typescript"]
+
+    steps:
+      # 1. 检出代码库内容
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # 2. 初始化 CodeQL 引擎, 指定分析 JavaScript/TypeScript 语言, 无需构建
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          config: |
+            paths:
+              - 'frontend/src/**'
+            paths-ignore:
+              - 'frontend/node_modules/**'
+              - 'frontend/dist/**'
+
+      # 3. 安装 Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      # 4. 安装依赖
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # 5. 执行分析并将结果上传到 GitHub Security 面板
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{matrix.language}}"

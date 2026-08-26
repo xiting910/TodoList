@@ -1,0 +1,158 @@
+# =============================================================================
+# CI 工作流: 根据代码变化自动运行前端或后端的构建测试
+# =============================================================================
+name: CI
+
+# 触发条件: 当向 main 分支 push 或发起 PR 时执行
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# 权限设置: CI 需要读取代码库内容、写入检查状态和 PR 评论
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+# 作业定义: 包含前端和后端的构建、测试等步骤
+jobs:
+  # 检测代码变化的作业
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      # 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # 检测哪些目录发生了变化
+      - name: Detect changes
+        uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
+  # 后端构建和测试作业
+  backend-build-and-test:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # 2. 安装 .NET 10 SDK
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+          cache: true
+          cache-dependency-path: |
+            **/*.csproj
+            **/*.props
+            **/*.slnx
+
+      # 3. 还原 NuGet 依赖包
+      - name: Restore NuGet packages
+        working-directory: backend
+        run: dotnet restore
+
+      # 4. 以 Release 模式编译整个解决方案
+      - name: Build solution (Release)
+        working-directory: backend
+        run: dotnet build --no-restore --configuration Release
+
+      # 5. 运行所有单元测试并生成 TRX 测试报告
+      - name: Run tests
+        working-directory: backend
+        run: |
+          dotnet test --solution TodoList.slnx --configuration Release --verbosity normal \
+            --report-xunit-trx --report-xunit-trx-filename test-results.trx \
+            --results-directory ./TestResults
+
+      # 6. 上传测试结果
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-test-results
+          path: backend/TestResults/
+          retention-days: 7
+
+      # 7. 在 PR 评论中显示测试摘要
+      - name: Upload coverage to PR comment
+        if: github.event_name == 'pull_request' && always()
+        uses: dorny/test-reporter@v3
+        with:
+          name: Backend Test Results
+          path: backend/TestResults/**/*.trx
+          reporter: dotnet-trx
+          fail-on-error: false
+
+  # 前端构建和测试作业
+  frontend-build-and-test:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # 2. 安装 Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      # 3. 安装依赖
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # 4. 运行 TypeScript 类型检查
+      - name: Run TypeScript type check
+        working-directory: frontend
+        run: npx vue-tsc --noEmit
+
+      # 5. 运行单元测试并生成 JUnit 报告
+      - name: Run tests
+        working-directory: frontend
+        run: npm run test:run -- --reporter=junit --outputFile=./test-results/test-results.xml
+
+      # 6. 上传测试结果
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-test-results
+          path: frontend/test-results/
+          retention-days: 7
+
+      # 7. 在 PR 评论中显示测试摘要
+      - name: Upload coverage to PR comment
+        if: github.event_name == 'pull_request' && always()
+        uses: dorny/test-reporter@v3
+        with:
+          name: Frontend Test Results
+          path: frontend/test-results/**/*.xml
+          reporter: jest-junit
+          fail-on-error: false
+
+      # 8. 构建项目
+      - name: Build project
+        working-directory: frontend
+        run: npm run build
