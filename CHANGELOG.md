@@ -22,6 +22,18 @@
 - 项目配置文件（.editorconfig, .gitignore, .gitattributes）
 - 前后端单元测试框架配置（xUnit / Vitest）
 - Dependabot npm 依赖更新配置（前端）
+- 待办事项 CRUD API 控制器（TodoController）
+- 数据库上下文（TodoDbContext）和 SQLite 数据库配置
+- 数据库迁移（InitialCreate）
+- 请求模型（CreateRequest, UpdateRequest）
+- CORS 配置，支持前端开发服务器（localhost:5173）
+- 完整的控制器单元测试（TodoControllerTests）
+
+### Changed
+
+- 移除测试项目中的 Moq 依赖，改用 InMemory 数据库进行测试
+- 删除冒烟测试（SmokeTest），替换为完整的 CRUD 测试
+- 修改数据库连接字符串名称从 "Default" 改为 "TodoList"
 
 ### Fixed
 
