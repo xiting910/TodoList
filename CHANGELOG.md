@@ -28,6 +28,13 @@
 - 请求模型（CreateRequest, UpdateRequest）
 - CORS 配置，支持前端开发服务器（localhost:5173）
 - 完整的控制器单元测试（TodoControllerTests）
+- 前端待办事项界面（Vue 3 + TypeScript）
+  - 待办事项列表展示, 支持加载中与空状态
+  - 新增待办事项, 回车或点击按钮提交
+  - 勾选切换完成状态, 双击编辑描述, 删除待办事项
+  - 全部 / 进行中 / 已完成筛选与未完成数量统计
+  - API 请求封装（todoApi）与 Vite 开发代理配置
+  - 组件单元测试（TodoInput / TodoFilter / TodoListItem / TodoList, 共 18 个用例）
 
 ### Changed
 
@@ -38,5 +45,6 @@
 ### Fixed
 
 - 修复前端 CI 测试步骤在无测试文件时失败的问题（添加 passWithNoTests 配置）
+- 修复 ESLint 配置中 .vue 文件 glob 模式未匹配 src 目录导致解析失败的问题
 
 [Unreleased]: https://github.com/xiting910/TodoList/commits/main
