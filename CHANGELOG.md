@@ -41,6 +41,7 @@
 - 移除测试项目中的 Moq 依赖，改用 InMemory 数据库进行测试
 - 删除冒烟测试（SmokeTest），替换为完整的 CRUD 测试
 - 修改数据库连接字符串名称从 "Default" 改为 "TodoList"
+- 重构 `backend/.editorconfig`：添加详细中文注释，按类别组织规则结构，禁止多个连续空行
 
 ### Fixed
 
