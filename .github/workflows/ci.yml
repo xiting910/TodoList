@@ -76,7 +76,7 @@ jobs:
       - name: Run tests
         working-directory: backend
         run: |
-          dotnet test --solution TodoList.slnx --configuration Release --verbosity normal \
+          dotnet test --solution TodoList.slnx --configuration Release --no-build --verbosity normal \
             --report-xunit-trx --report-xunit-trx-filename test-results.trx \
             --results-directory ./TestResults
 
